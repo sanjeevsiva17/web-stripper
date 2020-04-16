@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import sys
 import json
+from csv import DictWriter
 
 ZILLOW_BASE_URL = "https://www.zillow.com/"
 ZILLOW_PAGE_URL = "/home-values/"
@@ -86,7 +87,7 @@ def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
         zillow_data["location"] = url.replace(ZILLOW_BASE_URL, "").replace(ZILLOW_PAGE_URL, "")
         zillow_data["url"] = url
         zillow_data["zillow_value"] = parsed_html.find(id="region-info").h2.text
-        zillow_data["one_year_change:"] = x[1][0]
+        zillow_data["one_year_change"] = x[1][0]
         zillow_data["one_year_forcast"] = x[4][0]
         zillow_data["market_temperature"] = parsed_html.find(class_="market-temperature").find(class_="zsg-h2").text
         zillow_data["price_sqft"] = v[0][0]
@@ -104,6 +105,11 @@ def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
 
 
 def csv_dump(data):
+    with open('example.csv', 'w') as f:
+        csv_writer = DictWriter(f, fieldnames=['location', 'url', 'zillow_value', 'one_year_change', 'one_year_forcast', 'market_temperature', 'price_sqft', 'median_listing_price', 'median_sale_price', 'avg-days_on_market', 'negative_equity', 'delinquency', 'rent_list_price', 'rent_sqft'])
+        csv_writer.writeheader()
+
+        csv_writer.writerow(data)
 
 
 def json_dump(data):
@@ -124,7 +130,6 @@ while queue:
     url = queue.pop(0)
     parsed_html = parser(url)
     zillow_data, neighbours = filter_data(parsed_html, url)
-    print(zillow_data)
     csv_dump(zillow_data)
     json_dump(zillow_data)
     neighbour_urls = map(url_builder, neighbours)
