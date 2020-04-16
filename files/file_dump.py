@@ -8,10 +8,10 @@ def csv_dump(data: dict):
 
     args: json/dict object
 
-    returns none
+    returns None
     """
-    location = data["location"]
-    with open('files/csv/zillowInsight-' + location + ".csv", 'w') as f:
+    location = data.get('location', "")
+    with open('files/csv/zillowInsight-' + location + '.csv', 'w') as f:
         csv_writer = DictWriter(f, fieldnames=['location', 'url', 'zillow_value', 'one_year_change', 'one_year_forcast',
                                                'market_temperature', 'price_sqft', 'median_listing_price',
                                                'median_sale_price', 'avg-days_on_market', 'negative_equity',

@@ -74,8 +74,6 @@ def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
         for i in li:
             z.append(str(i).strip().split())
 
-    print(len(z))
-
     # rent list price rent sqft
     w = []
     for li in parsed_html.findAll(class_="zsg-content-section region-info")[1].find(class_="value-info-list").findAll(
