@@ -9,7 +9,7 @@ def zwillio_scraper(location_list):
 
     args : location list from command line args
 
-    returns : none
+    returns : None
     """
     url_list = map(scrape.url_builder, location_list[1:len(location_list)])
 

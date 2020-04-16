@@ -15,6 +15,9 @@ def parser(url: str) -> BeautifulSoup:
     returns : beautifulsoup object
     """
 
+    if not isinstance(url, str):
+        raise TypeError("Expecting url as string. " + str(type(url)) + " given")
+
     req_headers = {
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         'accept-encoding': 'gzip, deflate, br',
@@ -27,8 +30,12 @@ def parser(url: str) -> BeautifulSoup:
     with requests.Session() as s:
         source = s.get(url, headers=req_headers)
 
-    soup = BeautifulSoup(source.content, 'html.parser')
-    return soup
+    if source.status_code == 200:
+        soup = BeautifulSoup(source.content, 'html.parser')
+        return soup
+    else:
+        print("Error in parser")
+        print(source.status_code)
 
 
 def url_builder(location: str) -> str:
@@ -40,6 +47,9 @@ def url_builder(location: str) -> str:
     returns : url string
     """
 
+    if not isinstance(location, str):
+        raise TypeError("Expecting location as string. " + str(type(location)) + " given")
+
     return ZILLOW_BASE_URL + str(location) + ZILLOW_PAGE_URL
 
 
@@ -48,45 +58,51 @@ def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
     Function accepts beautifulsoup object and filters required data and makes an object
 
 
-    args : beautofulsoup object (contains html data), url as a string (to extract location)
+    args : beautifulsoup object (contains html data), url as a string (to extract location)
 
     returns : zillow data json/dictionary and list of neighbours of location
     """
 
+    if not isinstance(parsed_html, BeautifulSoup):
+        raise TypeError("parsed html should be BeautifulSoup type. " + str(type(parsed_html)) + "given")
+
+    if not isinstance(url, str):
+        raise TypeError("url should be a string. " + str(type(url)) + "given")
+
     zillow_data = {}
     # one year forecast and change
-    x = []
+    forecast_change = []
     for li in parsed_html.find(id="region-info").ul:
         for i in li:
-            x.append(str(i).strip().split())
+            forecast_change.append(str(i).strip().split())
 
     # median listing and median sale
-    y = []
+    median_listing_sale = []
     for li in parsed_html.find(class_="zsg-content-section market-overview").find(class_="value-info-list").findAll(
             class_="value"):
         for i in li:
-            y.append(str(i).strip().split())
+            median_listing_sale.append(str(i).strip().split())
 
     # avg days on market, neg equity, delinquency
-    z = []
+    market_health = []
     for li in parsed_html.find(class_="zsg-content-section market-health").find(class_="value-info-list").findAll(
             class_="value"):
         for i in li:
-            z.append(str(i).strip().split())
+            market_health.append(str(i).strip().split())
 
     # rent list price rent sqft
-    w = []
+    rent_details = []
     for li in parsed_html.findAll(class_="zsg-content-section region-info")[1].find(class_="value-info-list").findAll(
             class_="value"):
         for i in li:
-            w.append(str(i).strip().split())
+            rent_details.append(str(i).strip().split())
 
     # price sqft
-    v = []
+    price_sqft = []
     for li in parsed_html.find(class_="zsg-content-section listing-to-sales").find(class_="value-info-list").findAll(
             class_="value"):
         for i in li:
-            v.append(str(i).strip().split())
+            price_sqft.append(str(i).strip().split())
 
     # neighbours
     neighbours = []
@@ -97,22 +113,34 @@ def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
         zillow_data["location"] = url.replace(ZILLOW_BASE_URL, "").replace(ZILLOW_PAGE_URL, "")
         zillow_data["url"] = url
         zillow_data["zillow_value"] = str(parsed_html.find(id="region-info").h2.text).replace('$', '').replace(',', '')
-        zillow_data["one_year_change"] = str(x[1][0]).replace('%', '')
-        zillow_data["one_year_forcast"] = str(x[4][0]).replace('%', '')
+
+        zillow_data["one_year_change"] = str(forecast_change[1][0]).replace('%', '')
+        zillow_data["one_year_forcast"] = str(forecast_change[4][0]).replace('%', '')
+
         zillow_data["market_temperature"] = parsed_html.find(class_="market-temperature").find(
             class_="zsg-h2").text.lower()
-        zillow_data["price_sqft"] = str(v[0][0]).replace('$', '').replace(',', '')
-        zillow_data["median_listing_price"] = str(y[2][0]).replace('$', '').replace(',', '')
-        zillow_data["median_sale_price"] = str(y[3][0]).replace('$', '').replace(',', '')
-        if len(z) == 3:
-            zillow_data["avg-days_on_market"] = z[0][0]
-            zillow_data["negative_equity"] = str(round(float(z[1][0].replace('%', ''))/100, 3))
-            zillow_data["delinquency"] = str(round(float(z[2][0].replace('%', ''))/100, 3))
+        zillow_data["price_sqft"] = str(price_sqft[0][0]).replace('$', '').replace(',', '')
+
+        zillow_data["median_listing_price"] = str(median_listing_sale[2][0]).replace('$', '').replace(',', '')
+        zillow_data["median_sale_price"] = str(median_listing_sale[3][0]).replace('$', '').replace(',', '')
+
+        if len(market_health) == 1:
+            print("passing")
+            pass
+        elif len(market_health) == 3:
+            zillow_data["avg-days_on_market"] = market_health[0][0]
+            zillow_data["negative_equity"] = str(round(float(market_health[1][0].replace('%', '')) / 100, 3))
+            zillow_data["delinquency"] = str(round(float(market_health[2][0].replace('%', '')) / 100, 3))
+        elif len(market_health) == 2:
+            zillow_data["negative_equity"] = str(round(float(market_health[0][0].replace('%', '')) / 100, 3))
+            zillow_data["delinquency"] = str(round(float(market_health[1][0].replace('%', '')) / 100, 3))
         else:
-            zillow_data["negative_equity"] = str(round(float(z[0][0].replace('%', ''))/100, 3))
-            zillow_data["delinquency"] = str(round(float(z[1][0].replace('%', ''))/100, 3))
-        zillow_data["rent_list_price"] = str(w[1][0]).replace('$', '').replace(',', '')
-        zillow_data["rent_sqft"] = str(w[2][0]).replace('$', '').replace(',', '')
+            print("passing")
+            print(url)
+            print(len(market_health))
+
+        zillow_data["rent_list_price"] = str(rent_details[1][0]).replace('$', '').replace(',', '')
+        zillow_data["rent_sqft"] = str(rent_details[2][0]).replace('$', '').replace(',', '')
     except(TypeError, KeyError, AttributeError) as e:
         pass
 
