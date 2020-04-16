@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import sys
-import json
-from csv import DictWriter
+
 
 ZILLOW_BASE_URL = "https://www.zillow.com/"
 ZILLOW_PAGE_URL = "/home-values/"
@@ -11,7 +10,10 @@ ZILLOW_PAGE_URL = "/home-values/"
 def parser(url: str) -> BeautifulSoup:
     """
     parser function parses the given url using html parser in beautifulsoup and urllib
-    Gets url as parameter and returns beautifulsoup object
+
+    Args : url string type
+
+    returns : beautifulsoup object
     """
 
     req_headers = {
@@ -33,6 +35,10 @@ def parser(url: str) -> BeautifulSoup:
 def url_builder(location: str) -> str:
     """
     Gets location string and builds a url
+
+    args: location string
+
+    returns : url string
     """
 
     return ZILLOW_BASE_URL + str(location) + ZILLOW_PAGE_URL
@@ -41,6 +47,11 @@ def url_builder(location: str) -> str:
 def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
     """
     Function accepts beautifulsoup object and filters required data and makes an object
+
+
+    args : beautofulsoup object (contains html data), url as a string (to extract location)
+
+    returns : zillow data json/dictionary and list of neighbours of location
     """
 
     zillow_data = {}
@@ -103,35 +114,40 @@ def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
 
     return zillow_data, neighbours
 
+#
+# def csv_dump(data):
+#     with open('example.csv', 'w') as f:
+#         csv_writer = DictWriter(f, fieldnames=['location', 'url', 'zillow_value', 'one_year_change', 'one_year_forcast', 'market_temperature', 'price_sqft', 'median_listing_price', 'median_sale_price', 'avg-days_on_market', 'negative_equity', 'delinquency', 'rent_list_price', 'rent_sqft'])
+#         csv_writer.writeheader()
+#
+#         csv_writer.writerow(data)
+#
+#
+# def json_dump(data):
+#     json_object = json.dumps(data, indent=4)
+#     location = data["location"]
+#
+#     with open("zillowInsight-" + location + ".json", "w") as outfile:
+#         outfile.write(json_object)
+#
 
-def csv_dump(data):
-    with open('example.csv', 'w') as f:
-        csv_writer = DictWriter(f, fieldnames=['location', 'url', 'zillow_value', 'one_year_change', 'one_year_forcast', 'market_temperature', 'price_sqft', 'median_listing_price', 'median_sale_price', 'avg-days_on_market', 'negative_equity', 'delinquency', 'rent_list_price', 'rent_sqft'])
-        csv_writer.writeheader()
+#
+# location_list = sys.argv
+# url_list = map(url_builder, location_list[1:len(location_list)])
+#
+# queue = list(url_list)
+#
+# while queue:
+#     url = queue.pop(0)
+#     parsed_html = parser(url)
+#     zillow_data, neighbours = filter_data(parsed_html, url)
+#     csv_dump(zillow_data)
+#     json_dump(zillow_data)
+#     neighbour_urls = map(url_builder, neighbours)
+#     for neighbour in list(neighbour_urls):
+#         queue.append(neighbour)
 
-        csv_writer.writerow(data)
 
-
-def json_dump(data):
-    json_object = json.dumps(data, indent=4)
-    location = data["location"]
-
-    with open("zillowInsight-" + location + ".json", "w") as outfile:
-        outfile.write(json_object)
-
-
-
-location_list = sys.argv
-url_list = map(url_builder, location_list[1:len(location_list)])
-
-queue = list(url_list)
-
-while queue:
-    url = queue.pop(0)
-    parsed_html = parser(url)
-    zillow_data, neighbours = filter_data(parsed_html, url)
-    csv_dump(zillow_data)
-    json_dump(zillow_data)
-    neighbour_urls = map(url_builder, neighbours)
-    for neighbour in list(neighbour_urls):
-        queue.append(neighbour)
+if __name__ == '__main__':
+    print("You are trying to run a module.")
+    print("Please run main.py or read README.md")
