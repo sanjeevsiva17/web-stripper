@@ -1,0 +1,15 @@
+{
+    "location": "san-francisco-ca",
+    "url": "https://www.zillow.com/san-francisco-ca/home-values/",
+    "zillow_value": "1447191",
+    "one_year_change": "3.0",
+    "one_year_forcast": "-0.8",
+    "market_temperature": "cool",
+    "price_sqft": "1108",
+    "median_listing_price": "1310500",
+    "median_sale_price": "1364300",
+    "negative_equity": "0.026",
+    "delinquency": "0.002",
+    "rent_list_price": "4500",
+    "rent_sqft": "4.37"
+}

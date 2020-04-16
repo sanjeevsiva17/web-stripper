@@ -1,0 +1,2 @@
+location,url,zillow_value,one_year_change,one_year_forcast,market_temperature,price_sqft,median_listing_price,median_sale_price,avg-days_on_market,negative_equity,delinquency,rent_list_price,rent_sqft
+san-francisco-oakland-hayward-metro-ca_r395057,https://www.zillow.com/san-francisco-oakland-hayward-metro-ca_r395057/home-values/,1141029,3.1,0.1,cool,499,795000,814100,42,0.027,0.003,3300,2.49
