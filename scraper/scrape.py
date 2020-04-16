@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
-import sys
-
+import re
 
 ZILLOW_BASE_URL = "https://www.zillow.com/"
 ZILLOW_PAGE_URL = "/home-values/"
@@ -75,6 +74,8 @@ def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
         for i in li:
             z.append(str(i).strip().split())
 
+    print(len(z))
+
     # rent list price rent sqft
     w = []
     for li in parsed_html.findAll(class_="zsg-content-section region-info")[1].find(class_="value-info-list").findAll(
@@ -97,55 +98,27 @@ def filter_data(parsed_html: BeautifulSoup, url: str) -> dict:
     try:
         zillow_data["location"] = url.replace(ZILLOW_BASE_URL, "").replace(ZILLOW_PAGE_URL, "")
         zillow_data["url"] = url
-        zillow_data["zillow_value"] = parsed_html.find(id="region-info").h2.text
-        zillow_data["one_year_change"] = x[1][0]
-        zillow_data["one_year_forcast"] = x[4][0]
-        zillow_data["market_temperature"] = parsed_html.find(class_="market-temperature").find(class_="zsg-h2").text
-        zillow_data["price_sqft"] = v[0][0]
-        zillow_data["median_listing_price"] = y[2][0]
-        zillow_data["median_sale_price"] = y[3][0]
-        zillow_data["avg-days_on_market"] = z[0][0]
-        zillow_data["negative_equity"] = z[1][0]
-        zillow_data["delinquency"] = z[2][0]
-        zillow_data["rent_list_price"] = w[1][0]
-        zillow_data["rent_sqft"] = w[2][0]
+        zillow_data["zillow_value"] = str(parsed_html.find(id="region-info").h2.text).replace('$', '').replace(',', '')
+        zillow_data["one_year_change"] = str(x[1][0]).replace('%', '')
+        zillow_data["one_year_forcast"] = str(x[4][0]).replace('%', '')
+        zillow_data["market_temperature"] = parsed_html.find(class_="market-temperature").find(
+            class_="zsg-h2").text.lower()
+        zillow_data["price_sqft"] = str(v[0][0]).replace('$', '').replace(',', '')
+        zillow_data["median_listing_price"] = str(y[2][0]).replace('$', '').replace(',', '')
+        zillow_data["median_sale_price"] = str(y[3][0]).replace('$', '').replace(',', '')
+        if len(z) == 3:
+            zillow_data["avg-days_on_market"] = z[0][0]
+            zillow_data["negative_equity"] = str(round(float(z[1][0].replace('%', ''))/100, 3))
+            zillow_data["delinquency"] = str(round(float(z[2][0].replace('%', ''))/100, 3))
+        else:
+            zillow_data["negative_equity"] = str(round(float(z[0][0].replace('%', ''))/100, 3))
+            zillow_data["delinquency"] = str(round(float(z[1][0].replace('%', ''))/100, 3))
+        zillow_data["rent_list_price"] = str(w[1][0]).replace('$', '').replace(',', '')
+        zillow_data["rent_sqft"] = str(w[2][0]).replace('$', '').replace(',', '')
     except(TypeError, KeyError, AttributeError) as e:
         pass
 
     return zillow_data, neighbours
-
-#
-# def csv_dump(data):
-#     with open('example.csv', 'w') as f:
-#         csv_writer = DictWriter(f, fieldnames=['location', 'url', 'zillow_value', 'one_year_change', 'one_year_forcast', 'market_temperature', 'price_sqft', 'median_listing_price', 'median_sale_price', 'avg-days_on_market', 'negative_equity', 'delinquency', 'rent_list_price', 'rent_sqft'])
-#         csv_writer.writeheader()
-#
-#         csv_writer.writerow(data)
-#
-#
-# def json_dump(data):
-#     json_object = json.dumps(data, indent=4)
-#     location = data["location"]
-#
-#     with open("zillowInsight-" + location + ".json", "w") as outfile:
-#         outfile.write(json_object)
-#
-
-#
-# location_list = sys.argv
-# url_list = map(url_builder, location_list[1:len(location_list)])
-#
-# queue = list(url_list)
-#
-# while queue:
-#     url = queue.pop(0)
-#     parsed_html = parser(url)
-#     zillow_data, neighbours = filter_data(parsed_html, url)
-#     csv_dump(zillow_data)
-#     json_dump(zillow_data)
-#     neighbour_urls = map(url_builder, neighbours)
-#     for neighbour in list(neighbour_urls):
-#         queue.append(neighbour)
 
 
 if __name__ == '__main__':
